@@ -2,13 +2,13 @@ spring:
   application:
     name: chat-backend
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:chatdb}?ssl=true
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:chatdb}?sslmode=require}
     username: ${DB_USER:chatuser}
     password: ${DB_PASSWORD:chatpassword}
     driver-class-name: org.postgresql.Driver
     hikari:
-      maximum-pool-size: 10
-      minimum-idle: 5
+      maximum-pool-size: 8
+      minimum-idle: 2
       idle-timeout: 300000
       max-lifetime: 1200000
       connection-timeout: 30000
@@ -20,8 +20,7 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
-        jdbc:
-          batch_size: 25
+        format_sql: false
   kafka:
     bootstrap-servers: ${KAFKA_HOST}:${KAFKA_PORT}
     properties:
@@ -46,10 +45,19 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
-      ssl: { enabled: true }
+      ssl:
+        enabled: true
 
 server:
   port: ${PORT:8080}
+  error:
+    include-message: always
+
+logging:
+  level:
+    org.hibernate.SQL: ERROR
+    org.springframework.web: INFO
+    com.antigravity.chat: DEBUG
 
 chat:
   jwt:
