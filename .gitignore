@@ -1,0 +1,25 @@
+node_modules/
+dist/
+build/
+.npm/
+
+# Maven/Java
+target/
+*.class
+*.jar
+*.war
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.project
+*.settings
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker volumes (if any local mappings existed out of caution)
+data/
