@@ -1,12 +1,14 @@
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
 
+// Use VITE_WS_URL for production (e.g. https://your-backend.railway.app/ws)
+// Falls back to /ws which Vite proxies to localhost:8080 in development
+const WS_URL = import.meta.env.VITE_WS_URL || '/ws';
+
 export const createStompClient = (onConnect, onError) => {
     const token = localStorage.getItem('token');
     
-    // We connect to the proxy defined in vite.config.js (or direct to backend if no proxy)
-    // The endpoint is /ws.
-    const socket = new SockJS('/ws');
+    const socket = new SockJS(WS_URL);
     
     const client = new Client({
         webSocketFactory: () => socket,

@@ -2,6 +2,7 @@ package com.antigravity.chat.config;
 
 import com.antigravity.chat.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
@@ -26,6 +27,9 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     private final JwtUtil jwtUtil;
     private final UserDetailsService userDetailsService;
 
+    @Value("${chat.cors.allowed-origins:http://localhost:5173,http://localhost:8080}")
+    private String allowedOriginsRaw;
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
         config.enableSimpleBroker("/topic", "/queue", "/user");
@@ -35,12 +39,13 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
+        String[] origins = allowedOriginsRaw.split(",");
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:5173", "http://localhost:8080")
+                .setAllowedOrigins(origins)
                 .withSockJS();
-                
+
         registry.addEndpoint("/ws")
-                .setAllowedOrigins("http://localhost:5173", "http://localhost:8080");
+                .setAllowedOrigins(origins);
     }
 
     @Override

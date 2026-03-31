@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Use VITE_API_URL or default to same-origin if hosted together, or local 8080 fallback
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
 const api = axios.create({
-    baseURL: '/api',
+    baseURL: API_URL,
 });
 
 // Request Interceptor
