@@ -3,7 +3,9 @@ spring:
     name: chat-backend
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:${DB_URL:jdbc:postgresql://localhost:5432/chatdb}}
+    # Robust multi-source URL discovery for Render/Supabase/Railway
+    # Priority: SPRING_DATASOURCE_URL > DATABASE_URL > DB_URL > Local Postgres
+    url: ${SPRING_DATASOURCE_URL:${DATABASE_URL:${DB_URL:jdbc:postgresql://localhost:5432/chatdb}}}
     username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:chatuser}}
     password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:chatpassword}}
     driver-class-name: org.postgresql.Driver
@@ -13,17 +15,25 @@ spring:
       idle-timeout: 300000
       max-lifetime: 1200000
       connection-timeout: 30000
+      # Critical: Allow app to start even if DB is slow or temporarily down
       initialization-fail-timeout: 0
-
+    
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
+    open-in-view: false
     properties:
       hibernate:
+        # Avoid dialect detection issues in prod
         dialect: org.hibernate.dialect.PostgreSQLDialect
+        jdbc:
+          # Render often requires SSL for external databases
+          ssl: ${JDBC_SSL:true}
+          sslmode: ${JDBC_SSL_MODE:require}
 
   kafka:
+    # Default to localhost if no env vars are provided
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:${KAFKA_HOST:localhost}:${KAFKA_PORT:9092}}
     properties:
       security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
@@ -35,31 +45,41 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
       properties:
-        spring:
-          json:
-            trusted:
-              packages: "*"
+        spring.json.trusted.packages: "*"
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
   data:
     redis:
+      # Upstash/Render Redis URL support
       url: ${REDIS_URL:redis://localhost:6380}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
 server:
+  # Render standard port binding
   port: ${PORT:8080}
   error:
     include-message: always
 
 logging:
   level:
-    org.hibernate.SQL: ERROR
+    root: INFO
     org.springframework.web: INFO
+    org.hibernate.SQL: ERROR
     com.antigravity.chat: DEBUG
 
 chat:
   jwt:
+    # Hardened default secret for local testing; MUST be overridden in prod
     secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
     access-token-expiration: 3600000
     refresh-token-expiration: 86400000
